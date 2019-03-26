@@ -1,4 +1,6 @@
-Rspec.describe Game do
+require './Connect_Four'
+
+describe Game do
 
     describe '#win_check' do 
 
@@ -6,7 +8,7 @@ Rspec.describe Game do
         board = Board.new
         board.state = [['o','o','o','o'],[],[],[],[],[],[]]
         game = Game.new
-        expect(game.connect_four?(board).to eq(true)
+        expect(game.connect_four?(board)).to eq(true)
 
         end    
     end  
