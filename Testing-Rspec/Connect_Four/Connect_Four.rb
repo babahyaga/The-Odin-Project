@@ -1,8 +1,18 @@
+class Piece
+    attr_accessor :coordinates, :marker
+    def initialize(coords, marker)
+        @coordinates =  coords
+        @marker = marker
+    end
+end
+
 class Board
-    attr_accessor :state, :pieces_and_win_combos
-    def initialize
-        @state = [["x","x","x","x","x","x"],["o","o","o","o","o","o"],["x","x","x","x","x","x"],["o","o","o","o","o","o"],["x","x","x","x","x","x"],["o","o","o","o","o","o"],["x","x","x","x","x","x"]]
+    attr_accessor :state, :pieces_and_win_combos, :game
+    def initialize(game)
+        @state = [[],[],[],[],[],[],[]]
         @pieces_and_win_combos = {}
+        @game = game
+        display
     end
 
     def display
@@ -12,15 +22,19 @@ class Board
         print "    1     2     3     4     5     6     7"
     end
 
-    def place_piece(player, column)
-        column -= 1
-        if @state[column].length >= 7 
-            puts "please select a column that is not full"
-        else
-            piece = Piece.new(generate_coordinates(column),player)
-            @state[column] << piece
-            @pieces_and_win_combos[:piece] = generate_possible_wins_on_piece(piece)
-        end
+
+    def place_piece(column)
+        column = column.to_i - 1
+        piece = Piece.new(generate_coordinates(column),@game.marker)
+        @state[column] << piece.marker
+        @pieces_and_win_combos[:piece] = generate_possible_wins_on_piece(piece)
+       
+    end
+
+    #this method is used in the any_wins? method of the Game class
+    def get_piece(coords)
+        col, row = coords
+        return @state[col][row]
     end
 
     def inbounds?(col,row)
@@ -64,14 +78,79 @@ class Board
 end
 
 class Game
+    attr_accessor :marker
     def initialize
+        @marker = nil
+        @board = Board.new(self)
+        @turn = 0 
+        @winner = nil
+        play_game
     end
+
+    def play_game
+        until @winner != nil
+            turn
+        end
+        puts "Thank you for playing"
+    end
+
+    def turn
+        if (@turn % 2) == 0
+            @marker = "X"
+            puts "\nPlease choose the column you would like to drop your piece"
+            column = gets.chomp
+                until column =~ /^[1-7]{1}$/ && @board.state[column.to_i].length < 6
+                    puts "please choose a valid column"
+                    column = gets.chomp
+                end
+            @board.place_piece(column)
+            win_check?
+            @turn += 1
+            @board.display
+        else
+            @marker = "O"
+            puts "Please choose the column you would like to drop your piece"
+            column = gets.chomp
+                until column =~ /^[1-7]{1}$/ && @board.state[column.to_i].length < 6
+                    puts "please choose a valid column"
+                    column = gets.chomp
+                end
+            @board.place_piece(column)
+            win_check?
+            @turn += 1
+            @board.display
+        end
+    end
+
+    def any_wins?(possible_wins)
+        possible_wins.each do |possible_win| 
+
+            if possible_win.any? { |piece_coords| @board.get_piece(piece_coords).nil? }
+                next
+            end
+
+            if possible_win.all? { |piece_coords| @board.get_piece(piece_coords).marker ==  @marker}
+                @winner = @marker
+                puts " #{@marker}s win the game!" 
+                return true
+            end
+        end
+        return false
+    end
+
+    def win_check?
+        if @turn >= 7
+            @board.pieces_and_win_combos.each do |piece, possible_wins|
+                if any_wins?(possible_wins)
+                    return true
+                end
+            end
+        end
+    end
+
 end
 
-class Piece
-    attr_accessor :coordinates, :player
-    def initialize(coords,player)
-        @coordinates =  coords
-        @player = player
-    end
-end
+
+
+
+Game.new 
