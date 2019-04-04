@@ -22,13 +22,10 @@ class Board
         print "    1     2     3     4     5     6     7"
     end
 
-    def column_full?(column)
-        @state[column].length >6 ? true : false
-    end
-
 
     def place_piece(column)
 
+            column = column.to_i - 1
             piece = Piece.new(generate_coordinates(column),@game.marker)
             @state[column] << piece
             @pieces_and_win_combos[:piece] = generate_possible_wins_on_piece(piece)   
@@ -116,16 +113,19 @@ class Game
     def get_vaild_column_choice
         puts "\nPlease choose the column you would like to drop your piece"
         column = gets.chomp
-        until column =~ /^[1-7]{1}$/ do
+        if column !=~ /^[1-7]{1}$/ 
+
             puts "\nPlease choose a valid column"
             column = gets.chomp
+
+        elsif @board.state[column.to_i].length > 6
+
+            puts "please choose a column that is not full"
+            column = gets.chomp
         end
-        column = column.to_i - 1
-        if !@board.column_full?(column)
-            @board.place_piece(column)
-        else
-            puts "\nPlease choose a column that is not full"
-        end
+
+        @board.place_piece(column)
+
     end
 
     def any_wins?(possible_wins)
